@@ -32,3 +32,6 @@ npm-debug.log
 # css
 public/stylesheets/style.css
 public/stylesheets/style.css.map
+
+# vue
+public/vue.js

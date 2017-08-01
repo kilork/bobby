@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Bobby</title>
+        <link rel='stylesheet' href='/stylesheets/style.css' />
+        <script src="vue.js"></script>
+    </head>
+    <body>
+        <div id="container">
+            <div id="app">
+                <div class="menu">
+                </div>
+                <div class="loading" v-if="loading">
+                    Loading... {{ message }}
+                </div>
+                <div v-if="error" class="error">
+                    {{ error }}
+                </div>
+                <div v-if="processes" class="content">
+                    <div v-for="process in processes" v-on:click="selected = process" class="element" v-bind:class="{ selected: selected == process }">
+                        <div class="processState" :class="process.state">
+                            <div class="number">{{ process.id }}</div>
+                            <div class="symbol">{{ process.name }}</div>
+                            <div class="details">{{ process.details}}</div>
+                            <div style="clear: both;"></div>
+                        </div>
+                    </div>
+                </div>
+            </dev>
+        </div>
+        <script>
+            var app = new Vue({
+                el: '#app',
+                data: {
+                    message: 'Hello Vue!',
+                    loading: false,
+                    selected: null
+                },
+                created: function() {
+                    this.fetchData();
+                },
+                watch: {
+                    '$route': 'fetchData'
+                },
+                methods: {
+                    selectProcess: function(event) {
+                    },
+                    fetchData: function() {
+                        this.error = this.processes = null;
+                        this.loading = true;
+                        fetch('/api/processes')
+                        .then((response) => {
+                            if (!response.ok) {
+                                throw "Request error, please retry later..."
+                            }
+                            return response.json();
+                        })
+                        .then((json) => {
+                            this.loading = false;
+                            this.processes = json;
+                        })
+                        .catch((reason) => {
+                            this.loading = false;
+                            this.error = reason.message || reason;
+                        });
+                    }
+                }
+            });
+        </script>
+    </body>
+</html>
