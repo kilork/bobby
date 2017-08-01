@@ -33,5 +33,5 @@ npm-debug.log
 public/stylesheets/style.css
 public/stylesheets/style.css.map
 
-# vue
-public/vue.js
+# third party 
+public/tp/
