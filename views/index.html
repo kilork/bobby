@@ -6,6 +6,8 @@
         <link rel='stylesheet' href='/tp/xterm.css' />
         <script src="/tp/vue.js"></script>
         <script src="/tp/xterm.js"></script>
+        <script src="/tp/xterm-addons/attach/attach.js"></script>
+        <script src="/tp/xterm-addons/fit/fit.js"></script>
     </head>
     <body>
         <div id="container">
@@ -32,6 +34,7 @@
             <div style="clear: both;"></div>
         </div>
         <div id="terminal-container"></div>
+        <div style="clear: both;"></div>
         <script>
             var app = new Vue({
                 el: '#app',
@@ -70,8 +73,46 @@
                     }
                 }
             });
-            var term = new Terminal();
-            term.open(document.getElementById('terminal-container'));
+
+            createTerminal();
+
+            function createTerminal() {
+                let pid;
+                let term = new Terminal();
+                term.on('resize', (size) => {
+                    if (!pid) {
+                        return;
+                    }
+                    fetch(`/terminals/${pid}`, { method: 'PUT', body: JSON.stringify({ pid: pid, cols: size.cols, rows: size.rows }) });
+                });
+                let protocol = (location.protocol === 'https:') ? 'wss://' : 'ws://';
+                let socketURL = protocol + location.hostname + ((location.port) ? (':' + location.port) : '') + '/terminals/';
+
+                term.open(document.getElementById('terminal-container'));
+                //term.fit();
+
+                let initialGeometry = term.proposeGeometry(),
+                    cols = initialGeometry.cols,
+                    rows = initialGeometry.rows;
+                const makeRequest = async () => {
+                    let response = await fetch('/terminals', { method: 'POST', headers: new Headers({'Content-Type': 'application/json'}), body: JSON.stringify({ cols: cols, rows: rows }) });
+                    let charWidth = Math.ceil(term.element.offsetWidth / cols);
+                    let charHeight = Math.ceil(term.element.offsetHeight / rows);
+
+                    let pid = (await response.json()).pid;
+                    window.pid = pid;
+                    socketURL += pid;
+                    socket = new WebSocket(socketURL);
+                    socket.onopen = () => runRealTerminal(term, socket);
+                    // socket.onclose = runFakeTerminal;
+                    // socket.onerror = runFakeTerminal;
+                };
+                makeRequest();
+            }
+
+            function runRealTerminal(term, socket) {
+                term.attach(socket);
+            }
         </script>
     </body>
 </html>
