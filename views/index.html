@@ -3,11 +3,11 @@
     <head>
         <title>Bobby</title>
         <link rel='stylesheet' href='/stylesheets/style.css' />
-        <link rel='stylesheet' href='/tp/xterm.css' />
-        <script src="/tp/vue.js"></script>
-        <script src="/tp/xterm.js"></script>
-        <script src="/tp/xterm-addons/attach/attach.js"></script>
-        <script src="/tp/xterm-addons/fit/fit.js"></script>
+        <link rel='stylesheet' href='/tp/xterm/css/xterm.css' />
+        <script src="/tp/vue/dist/vue.js"></script>
+        <script src="/tp/xterm/lib/xterm.js"></script>
+        <script src="/tp/xterm-addon-attach/lib/xterm-addon-attach.js"></script>
+        <script src="/tp/xterm-addon-fit/lib/xterm-addon-fit.js"></script>
     </head>
     <body>
         <div id="container">
@@ -79,7 +79,7 @@
             function createTerminal() {
                 let pid;
                 let term = new Terminal();
-                term.on('resize', (size) => {
+                term.onResize((size) => {
                     if (!pid) {
                         return;
                     }
@@ -91,9 +91,8 @@
                 term.open(document.getElementById('terminal-container'));
                 //term.fit();
 
-                let initialGeometry = term.proposeGeometry(),
-                    cols = initialGeometry.cols,
-                    rows = initialGeometry.rows;
+                let cols = 80,
+                    rows = 25;
                 const makeRequest = async () => {
                     let response = await fetch('/terminals', { method: 'POST', headers: new Headers({'Content-Type': 'application/json'}), body: JSON.stringify({ cols: cols, rows: rows }) });
                     let charWidth = Math.ceil(term.element.offsetWidth / cols);
@@ -111,7 +110,7 @@
             }
 
             function runRealTerminal(term, socket) {
-                term.attach(socket);
+                term.loadAddon(new AttachAddon.AttachAddon(socket));
             }
         </script>
     </body>
